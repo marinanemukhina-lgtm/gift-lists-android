@@ -1,5 +1,8 @@
-name: Manual Android acceptance (synthetic demo)
+name: Android acceptance (synthetic demo)
 on:
+  # One approved launch only: later pushes cannot satisfy the exact before-SHA guard.
+  push:
+    branches: [main]
   workflow_dispatch:
     inputs:
       reviewed_sha:
@@ -13,7 +16,7 @@ concurrency:
   cancel-in-progress: false
 jobs:
   native-acceptance:
-    if: github.event_name == 'workflow_dispatch' && github.repository == 'marinanemukhina-lgtm/gift-lists-android' && github.repository_id == '1435989060' && github.event.repository.private == false && github.event.repository.visibility == 'public' && github.ref == 'refs/heads/main' && github.run_attempt == '1' && inputs.reviewed_sha == github.sha
+    if: ((github.event_name == 'workflow_dispatch' && inputs.reviewed_sha == github.sha) || (github.event_name == 'push' && github.event.before == '205621b822848a44509f42205ffda8da9a5d12f2' && github.event.forced == false && github.event.deleted == false && github.event.head_commit.message == 'Run approved one-shot Android acceptance')) && github.repository == 'marinanemukhina-lgtm/gift-lists-android' && github.repository_id == '1435989060' && github.event.repository.private == false && github.event.repository.visibility == 'public' && github.ref == 'refs/heads/main' && github.run_attempt == '1'
     runs-on: ubuntu-24.04
     timeout-minutes: 40
     # Explicitly approved WHOLE-JOB write authority, not asset-only authority.
@@ -26,7 +29,7 @@ jobs:
       VITE_PUBLIC_ORIGIN: ''
       VITE_SUPPORT_CONTACT: ''
       API_LEVEL: '36'
-      REVIEWED_SHA: ${{ inputs.reviewed_sha }}
+      REVIEWED_SHA: ${{ github.event_name == 'push' && github.sha || inputs.reviewed_sha }}
     steps:
       - name: Require the reviewed main snapshot
         shell: bash

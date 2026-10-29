@@ -73,15 +73,15 @@ class EvidenceTests(unittest.TestCase):
     def test_workflow_rejects_unreviewed_context_before_allocating_one_api36_runner(self):
         workflow=(path.parent.parent/'.github/workflows/android-acceptance.yml').read_text()
         condition=next(line.strip()[4:] for line in workflow.splitlines() if line.startswith('    if: '))
-        self.assertEqual(set(condition.split(' && ')),{
-            "github.event_name == 'workflow_dispatch'",
+        envelope, common = condition.split(')) && ', 1)
+        self.assertEqual(envelope + '))', "((github.event_name == 'workflow_dispatch' && inputs.reviewed_sha == github.sha) || (github.event_name == 'push' && github.event.before == '205621b822848a44509f42205ffda8da9a5d12f2' && github.event.forced == false && github.event.deleted == false && github.event.head_commit.message == 'Run approved one-shot Android acceptance'))")
+        self.assertEqual(set(common.split(' && ')),{
             "github.repository == 'marinanemukhina-lgtm/gift-lists-android'",
             "github.repository_id == '1435989060'",
             "github.event.repository.private == false",
             "github.event.repository.visibility == 'public'",
             "github.ref == 'refs/heads/main'",
             "github.run_attempt == '1'",
-            'inputs.reviewed_sha == github.sha',
         })
         self.assertLess(workflow.index('    if: '),workflow.index('    runs-on: '))
         self.assertEqual(workflow.count('    runs-on: '),1)
@@ -90,6 +90,22 @@ class EvidenceTests(unittest.TestCase):
         self.assertNotIn('api_level:',workflow)
         self.assertNotIn('strategy:',workflow)
         self.assertIn('run: bash scripts/mobile-ci-acceptance.sh',workflow)
+
+    def test_one_shot_push_accepts_only_exact_unconsumed_envelope(self):
+        with tempfile.TemporaryDirectory() as root:
+            payload = dict(before=module.ONE_SHOT_BEFORE, after=SHA, forced=False, deleted=False,
+                           head_commit={'message': module.ONE_SHOT_MESSAGE}, repository={'id': module.REPO_ID, 'private': False})
+            event_path = pathlib.Path(root) / 'event.json'
+            good = {**env(root), 'GITHUB_EVENT_NAME': 'push', 'GITHUB_EVENT_PATH': str(event_path)}
+            event_path.write_text(json.dumps(payload))
+            self.assertEqual(module.context(good)[0], SHA)
+            for field, value in [('before', SHA), ('after', 'b'*40), ('forced', True), ('deleted', True),
+                                 ('head_commit', {'message': 'later push'}), ('repository', {'id': module.REPO_ID, 'private': True})]:
+                event_path.write_text(json.dumps({**payload, field: value}))
+                with self.assertRaises(AssertionError): module.context(good)
+            event_path.write_text(json.dumps(payload))
+            with self.assertRaises(AssertionError): module.context({**good, 'GITHUB_RUN_ATTEMPT': '2'})
+            with self.assertRaises(AssertionError): module.context({**good, 'GITHUB_EVENT_NAME': 'pull_request'})
 
     def test_context_rejects_local_or_changed_source(self):
         with tempfile.TemporaryDirectory() as root:

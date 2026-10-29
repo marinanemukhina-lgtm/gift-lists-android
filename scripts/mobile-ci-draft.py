@@ -49,8 +49,27 @@ def validate_png(data):
     raise AssertionError('PNG has no complete IEND')
 
 
+ONE_SHOT_BEFORE = '205621b822848a44509f42205ffda8da9a5d12f2'
+ONE_SHOT_MESSAGE = 'Run approved one-shot Android acceptance'
+
+
+def validate_event(env):
+    assert env.get('GITHUB_ACTIONS') == 'true', 'Official CI only'
+    event = env.get('GITHUB_EVENT_NAME')
+    if event == 'workflow_dispatch':
+        return
+    assert event == 'push', 'Only manual or the approved one-shot push'
+    payload = json.loads(pathlib.Path(env['GITHUB_EVENT_PATH']).read_text())
+    assert payload.get('before') == ONE_SHOT_BEFORE, 'One-shot parent has already been consumed or is wrong'
+    assert payload.get('after') == env.get('GITHUB_SHA'), 'Unexpected pushed source'
+    assert payload.get('forced') is False and payload.get('deleted') is False, 'No forced/deleted ref'
+    assert payload.get('head_commit', {}).get('message') == ONE_SHOT_MESSAGE, 'Not the reviewed launch commit'
+    repo = payload.get('repository', {})
+    assert repo.get('id') == REPO_ID and repo.get('private') is False, 'Public approved repository only'
+
+
 def context(env):
-    assert env.get('GITHUB_ACTIONS') == 'true' and env.get('GITHUB_EVENT_NAME') == 'workflow_dispatch', 'Manual official CI only'
+    validate_event(env)
     assert env.get('GITHUB_REPOSITORY') == REPO and env.get('GITHUB_REPOSITORY_ID') == str(REPO_ID), 'Wrong repository'
     assert env.get('GITHUB_REF') == 'refs/heads/main', 'Reviewed main only'
     sha = env.get('REVIEWED_SHA', '')

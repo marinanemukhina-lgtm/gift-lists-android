@@ -2,7 +2,13 @@
 # Inert locally unless all official CI/repository/snapshot guards pass. No production credentials.
 set -euo pipefail
 cd "$(dirname "$0")/.."
-[[ "${GITHUB_ACTIONS:-}" == true && "${GITHUB_EVENT_NAME:-}" == workflow_dispatch ]]
+# Independently enforce the event envelope before installing/building anything.
+python3 -B - <<'PYGUARD'
+import importlib.util, os
+spec = importlib.util.spec_from_file_location('gift_evidence', 'scripts/mobile-ci-draft.py')
+module = importlib.util.module_from_spec(spec); spec.loader.exec_module(module)
+module.validate_event(os.environ)
+PYGUARD
 [[ "${GITHUB_REPOSITORY:-}" == marinanemukhina-lgtm/gift-lists-android ]]
 [[ "${GITHUB_RUN_ATTEMPT:-}" == 1 ]]
 [[ "${GITHUB_REPOSITORY_ID:-}" == 1435989060 && "${GITHUB_REF:-}" == refs/heads/main ]]
