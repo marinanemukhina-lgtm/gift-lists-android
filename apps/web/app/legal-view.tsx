@@ -6,6 +6,10 @@ export function readWebReleaseConfig(env:Readonly<Record<string,string|undefined
   return readReleaseConfig({
     demo:env.NEXT_PUBLIC_DEMO,
     legalApproved:env.GIFT_LEGAL_APPROVED,
+    rulesUrl:env.NEXT_PUBLIC_RULES_URL,
+    rulesUpdatedAt:env.NEXT_PUBLIC_RULES_UPDATED_AT,
+    rulesApproved:env.GIFT_RULES_APPROVED,
+    rulesText:env.GIFT_RULES_TEXT,
     requireLegalText:true,
     apiOrigin:env.NEXT_PUBLIC_API_ORIGIN,
     publicOrigin:env.NEXT_PUBLIC_PUBLIC_ORIGIN,
@@ -21,7 +25,7 @@ export type LegalConfig=ReturnType<typeof readWebReleaseConfig>;
 
 function LegalLayout({title,children}:{title:string;children:ReactNode}){
   return <main style={{maxWidth:800,margin:'0 auto',padding:'32px 24px',lineHeight:1.7}}>
-    <nav aria-label="Основная навигация"><a href="/">Список подарков</a>{' · '}<a href="/privacy">Конфиденциальность</a>{' · '}<a href="/support">Поддержка</a></nav>
+    <nav aria-label="Основная навигация"><a href="/">Список подарков</a>{' · '}<a href="/privacy">Конфиденциальность</a>{' · '}<a href="/support">Поддержка</a>{' · '}<a href="/rules">Правила контента</a></nav>
     <h1>{title}</h1>{children}
   </main>;
 }
@@ -64,5 +68,24 @@ export function SupportView({config}:{config:LegalConfig}){
     <h2>Удаление и восстановление</h2>
     <p>Для управления своим списком используйте доступ владельца. Файл восстановления предоставляет полный доступ к спискам; храните его отдельно и не передавайте в поддержку. Не считайте удаление приложения удалением опубликованного серверного списка.</p>
     <p><a href="/privacy">Сведения об обработке данных</a></p>
+  </LegalLayout>;
+}
+
+export function RulesView({config}:{config:LegalConfig}){
+  return <LegalLayout title="Правила пользовательского контента">
+    {config.demo?<>
+      <p role="note"><strong>Демонстрационный режим.</strong> Правила для публичного сервиса ещё не утверждены. Здесь разрешены только вымышленные данные для тестирования; эта страница не является утверждёнными условиями сервиса.</p>
+      <h2>Сообщение о нарушении</h2>
+      <p>В открытом гостевом списке есть кнопка «Сообщить о нарушении». Сообщение сохраняется на сервере после подтверждения отправки. Не включайте в него ключи доступа, файл восстановления или персональные данные.</p>
+      <p>Регистрация сообщения не означает, что его уже рассмотрели или удалили содержимое. Оператор, порядок рассмотрения и сроки ответа для публичного сервиса ещё не утверждены.</p>
+      <h2>Перед публичным запуском</h2>
+      <p>Нужно утвердить правила допустимого контента, права на материалы, порядок жалоб, рассмотрения, ограничения доступа и оспаривания решений, а также ответственного оператора и контакт. Демоверсия не подменяет эти решения.</p>
+    </>:<>
+      <p>Оператор: {config.operatorName}</p>
+      <p>Версия от <time dateTime={config.rulesUpdatedAt}>{config.rulesUpdatedAt}</time></p>
+      <div style={{whiteSpace:'pre-wrap',overflowWrap:'anywhere'}}>{config.rulesText}</div>
+      <p>Контакт для обращений: {config.supportContact}</p>
+    </>}
+    <p><a href="/support">Поддержка и безопасное обращение</a></p>
   </LegalLayout>;
 }

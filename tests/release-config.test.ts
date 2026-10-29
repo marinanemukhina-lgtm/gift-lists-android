@@ -2,7 +2,7 @@ import test from 'node:test';
 import assert from 'node:assert/strict';
 import {readFileSync} from 'node:fs';
 import {readReleaseConfig,validateServerMode} from '../packages/domain/src/release-config';
-const complete={demo:'false',apiOrigin:'https://api.gift-fixture.org',publicOrigin:'https://gift-fixture.org',operatorName:'Synthetic operator for unit tests',supportContact:'support@gift-fixture.org',privacyPolicyUrl:'https://gift-fixture.org/privacy',supportUrl:'https://gift-fixture.org/support',legalApproved:'true',privacyText:'Synthetic approved policy text for unit tests only.',privacyUpdatedAt:'2026-10-29'};
+const complete={demo:'false',apiOrigin:'https://api.gift-fixture.org',publicOrigin:'https://gift-fixture.org',operatorName:'Synthetic operator for unit tests',supportContact:'support@gift-fixture.org',privacyPolicyUrl:'https://gift-fixture.org/privacy',supportUrl:'https://gift-fixture.org/support',legalApproved:'true',privacyText:'Synthetic approved policy text for unit tests only.',privacyUpdatedAt:'2026-10-29',rulesUrl:'https://gift-fixture.org/rules',rulesUpdatedAt:'2026-10-29',rulesApproved:'true',rulesText:'Synthetic approved rules for unit tests only.'};
 test('offline default remains demo; explicit production is not hardcoded demo',()=>{
  assert.equal(readReleaseConfig({}).demo,true);assert.equal(readReleaseConfig(complete).demo,false);
  const native=readFileSync(new URL('../apps/mobile/src/native.ts',import.meta.url),'utf8');assert.doesNotMatch(native,/publicOrigin,demo:true/);assert.match(native,/demo:release.demo/);
@@ -44,4 +44,19 @@ test('API runtime mismatch returns a generic 503 before attempting a database co
 test('Next freezes even an omitted default-demo flag into the compiled application',()=>{
  const config=readFileSync(new URL('../apps/web/next.config.ts',import.meta.url),'utf8');
  assert.match(config,/env:\{NEXT_PUBLIC_DEMO:String\(release.demo\)\}/);
+});
+
+
+test('production UGC rules need separate approval, HTTPS URL and a valid revision even in client builds',()=>{
+ for(const key of ['rulesUrl','rulesUpdatedAt','rulesApproved'] as const)assert.throws(()=>readReleaseConfig({...complete,[key]:''}),Error,key);
+ for(const rulesApproved of ['false','TRUE','yes'])assert.throws(()=>readReleaseConfig({...complete,rulesApproved}));
+ for(const rulesUpdatedAt of ['2026-02-30','2026-10-29T00:00:00Z','not-a-date'])assert.throws(()=>readReleaseConfig({...complete,rulesUpdatedAt}));
+ for(const rulesUrl of ['http://gift-fixture.org/rules','https://example.com/rules','https://user:secret@gift-fixture.org/rules'])assert.throws(()=>readReleaseConfig({...complete,rulesUrl}));
+ assert.equal(readReleaseConfig(complete).rulesUpdatedAt,'2026-10-29');
+});
+
+test('server production rules text is required, bounded and not a placeholder; demo stays unconfigured',()=>{
+ for(const rulesText of ['', 'TODO', 'заполнить', 'Правила позже', 'x'.repeat(60001)])assert.throws(()=>readReleaseConfig({...complete,requireLegalText:true,rulesText}));
+ assert.equal(readReleaseConfig({...complete,requireLegalText:true}).rulesText,complete.rulesText);
+ const demo=readReleaseConfig({});assert.equal(demo.rulesUrl,'');assert.equal(demo.rulesUpdatedAt,'');assert.equal(demo.rulesText,'');
 });

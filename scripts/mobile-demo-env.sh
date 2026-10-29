@@ -11,3 +11,5 @@ case "${GIFT_ANDROID_MODE:-offline}" in
   *) echo 'Unreviewed Android mode: refusing build' >&2; return 1 ;;
 esac
 export VITE_DEMO='true' VITE_SUPPORT_CONTACT='' VITE_OPERATOR_NAME='' VITE_LEGAL_APPROVED='false'
+# Rules route is not deployed yet; synthetic builds must not inherit release inputs.
+export VITE_RULES_URL='' VITE_RULES_UPDATED_AT='' VITE_RULES_APPROVED='false'
