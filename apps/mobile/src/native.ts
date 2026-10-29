@@ -5,12 +5,12 @@ import {Network} from '@capacitor/network';
 import {Share} from '@capacitor/share';
 import {Filesystem,Directory,Encoding} from '@capacitor/filesystem';
 import {SecureStorage} from '@aparajita/capacitor-secure-storage';
-import type {AppPorts,PlatformActions} from '../../../packages/domain/src/index';
+import {readReleaseConfig,type AppPorts,type PlatformActions} from '../../../packages/domain/src/index';
 import {createHttpApis,createJsonDraftStore,newId,newSecret,newShareCode} from '../../../packages/client/src/index';
 import {createPrivateFileStore} from './file-store';
 import {createNativeCredentialStore} from './credentials';
 import {createBackDispatcher} from './back';
-import {httpsOrigin,validatedExternal,validatedGuestLink} from './security';
+import {validatedExternal,validatedGuestLink} from './security';
 interface DocumentsPlugin{capabilities():Promise<{secureStorage:boolean}>;exportFile(options:{name:string;contents:string}):Promise<{cancelled:boolean}>;importFile():Promise<{cancelled:boolean;contents?:string}>}
 const Documents=registerPlugin<DocumentsPlugin>('GiftDocuments');
 let verifiedNativeStorage=false;
@@ -19,7 +19,8 @@ const isMissing=(error:unknown)=>{const code=(error as {code?:string})?.code;ret
 const dataDirectory='gift-data-v1';
 export async function createNativePorts():Promise<AppPorts>{
  if(!Capacitor.isNativePlatform()||Capacitor.getPlatform()!=='android')throw new Error('Эта сборка предназначена для Android. Откройте веб-версию в браузере.');
- const publicOrigin=httpsOrigin(import.meta.env.VITE_PUBLIC_ORIGIN),apiOrigin=httpsOrigin(import.meta.env.VITE_API_ORIGIN);
+ const release=readReleaseConfig({demo:import.meta.env.VITE_DEMO,apiOrigin:import.meta.env.VITE_API_ORIGIN,publicOrigin:import.meta.env.VITE_PUBLIC_ORIGIN,supportContact:import.meta.env.VITE_SUPPORT_CONTACT,operatorName:import.meta.env.VITE_OPERATOR_NAME,privacyPolicyUrl:import.meta.env.VITE_PRIVACY_POLICY_URL,supportUrl:import.meta.env.VITE_SUPPORT_URL,legalApproved:import.meta.env.VITE_LEGAL_APPROVED});
+ const {publicOrigin,apiOrigin}=release;
  // Never instantiate or call the plugin's deliberately insecure web fallback.
  const capabilities=await Documents.capabilities();verifiedNativeStorage=capabilities.secureStorage===true;
  assertNative();await SecureStorage.setKeyPrefix('gift-lists-v1_');
@@ -56,5 +57,5 @@ export async function createNativePorts():Promise<AppPorts>{
   subscribeBack(callback){return back.subscribe(callback);}
 
  };
- return {...createHttpApis(apiOrigin),credentials,drafts:createJsonDraftStore(storage),platform,publicOrigin,demo:true,supportContact:import.meta.env.VITE_SUPPORT_CONTACT||undefined};
+ return {...createHttpApis(apiOrigin),credentials,drafts:createJsonDraftStore(storage),platform,publicOrigin,demo:release.demo,supportContact:release.supportContact||undefined,privacyPolicyUrl:release.privacyPolicyUrl||undefined,supportUrl:release.supportUrl||undefined};
 }
