@@ -75,7 +75,7 @@ class EvidenceTests(unittest.TestCase):
         workflow=(path.parent.parent/'.github/workflows/android-acceptance.yml').read_text()
         condition=next(line.strip()[4:] for line in workflow.splitlines() if line.startswith('    if: '))
         envelope, common = condition.split(')) && ', 1)
-        self.assertEqual(envelope + '))', "((github.event_name == 'workflow_dispatch' && inputs.reviewed_sha == github.sha) || (github.event_name == 'push' && github.event.before == '6d0c864582d4a01f4ce3a60283cfbe13b0d111d4' && github.event.forced == false && github.event.deleted == false && github.event.head_commit.message == 'Run approved corrective Android acceptance'))")
+        self.assertEqual(envelope + '))', "((github.event_name == 'workflow_dispatch' && inputs.reviewed_sha == github.sha) || (github.event_name == 'push' && github.event.before == '974f7f4584a3c75cc26df53c10f6f64d1ecbc2e0' && github.event.forced == false && github.event.deleted == false && github.event.head_commit.message == 'Run approved online synthetic Android acceptance'))")
         self.assertEqual(set(common.split(' && ')),{
             "github.repository == 'marinanemukhina-lgtm/gift-lists-android'",
             "github.repository_id == '1435989060'",

@@ -190,3 +190,34 @@ test('superseded recovery-code rotation replay cannot acknowledge a revoked reco
   assert.equal((await f.call('/owners/recover','POST',{recoverySecret:b,newDeviceSecret:credentials().deviceSecret})).status,401);
   assert.equal((await f.call('/owners/recover','POST',{recoverySecret:c,newDeviceSecret:credentials().deviceSecret})).status,200);
 });
+
+test('online rehearsal: independent handlers retain booking through edit, recovery and scoped cleanup',async t=>{
+  const f=await fixture(t),owner=await f.enroll(),other=await f.enroll();
+  const untouched=await f.create(other.deviceSecret),{event}=await f.create(owner.deviceSecret);
+  // A new handler represents another function instance: no shared handler-local cache.
+  const independent=createApiHandler(f.db,{allowedOrigins:['https://demo.test'],demo:true});
+  async function independentRead(token:string){
+    const response=await independent(new Request(`https://demo.test/api/v1/public/events/${event.slug}`,{headers:{'x-guest-secret':token}}));
+    assert.equal(response.status,200);return await response.json() as GuestSnapshot;
+  }
+  const guests=[guest(),guest()],path=`/public/events/${event.slug}`,giftId=event.gifts[0].id;
+  const race=await Promise.all(guests.map(token=>f.call(`${path}/reservations`,'POST',{giftId},{guest:token})));
+  assert.deepEqual(race.map(x=>x.status).sort(),[200,409]);
+  const winner=guests[race.findIndex(x=>x.status===200)],loser=guests[race.findIndex(x=>x.status===409)];
+  assert.equal((await independentRead(winner)).reservations[0].mine,true);
+  assert.equal((await independentRead(loser)).reservations[0].mine,false);
+  const saved=await f.call(`/me/events/${event.id}`,'PUT',{...event,title:'Синтетическая проверка сохранения'},{owner:owner.deviceSecret,version:1});
+  assert.equal(saved.status,200);assert.equal((await independentRead(winner)).reservations.length,1);
+  assert.equal((await f.call(`${path}/reservations/${giftId}`,'DELETE',undefined,{guest:winner})).status,200);
+  assert.equal((await f.call(`${path}/reservations`,'POST',{giftId},{guest:loser})).status,200);
+  assert.equal((await independentRead(loser)).reservations[0].mine,true);
+  const replacement=credentials();
+  assert.equal((await f.call('/owners/recover','POST',{recoverySecret:owner.recoverySecret,newDeviceSecret:replacement.deviceSecret})).status,200);
+  assert.equal((await f.call('/me/events','GET',undefined,{owner:owner.deviceSecret})).status,401);
+  const recovered=await f.call(`/me/events/${event.id}`,'GET',undefined,{owner:replacement.deviceSecret});
+  assert.equal(recovered.body.event.title,'Синтетическая проверка сохранения');assert.deepEqual(recovered.body.bookedIds,[giftId]);
+  assert.equal((await f.call('/me','DELETE',undefined,{owner:replacement.deviceSecret})).status,200);
+  assert.equal((await f.call(path)).status,404);
+  assert.equal((await f.call(`/me/events/${untouched.event.id}`,'GET',undefined,{owner:other.deviceSecret})).status,200);
+  assert.equal((await f.pg.query('SELECT * FROM reservations')).rows.length,0);
+});

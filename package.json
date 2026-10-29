@@ -14,7 +14,7 @@
     "start": "next start apps/web",
     "check": "npm run typecheck && npm test && npm run test:mobile-tooling && npm run build:web && npm run build:mobile",
     "dev:web": "next dev apps/web --hostname 127.0.0.1",
-    "test:mobile-tooling": "python3 -B apps/mobile/tests/build-script.test.py && python3 -B apps/mobile/tests/ci-evidence.test.py"
+    "test:mobile-tooling": "python3 -B apps/mobile/tests/build-script.test.py && python3 -B apps/mobile/tests/ci-evidence.test.py && python3 -B apps/mobile/tests/demo-env.test.py"
   },
   "dependencies": {
     "@aparajita/capacitor-secure-storage": "8.0.1",

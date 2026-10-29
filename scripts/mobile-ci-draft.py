@@ -49,8 +49,8 @@ def validate_png(data):
     raise AssertionError('PNG has no complete IEND')
 
 
-ONE_SHOT_BEFORE = '6d0c864582d4a01f4ce3a60283cfbe13b0d111d4'
-ONE_SHOT_MESSAGE = 'Run approved corrective Android acceptance'
+ONE_SHOT_BEFORE = '974f7f4584a3c75cc26df53c10f6f64d1ecbc2e0'
+ONE_SHOT_MESSAGE = 'Run approved online synthetic Android acceptance'
 
 
 def validate_event(env):

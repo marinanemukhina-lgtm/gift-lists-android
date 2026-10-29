@@ -21,11 +21,11 @@ export PATH="$JAVA_HOME/bin:$ANDROID_HOME/platform-tools:$ANDROID_HOME/emulator:
 export ANDROID_AVD_HOME="$RUNNER_TEMP/gift-avd"
 export GRADLE_USER_HOME="$RUNNER_TEMP/gift-gradle"
 export npm_config_cache="$RUNNER_TEMP/gift-npm-cache"
-# Refuse accidentally committed configuration; empty Vite env is intentionally offline-only.
+# Refuse accidentally committed configuration; exact synthetic origins come from reviewed source.
 if find . -path './.git' -prune -o -path './node_modules' -prune -o -name '.env*' ! -name '.env.example' -print | grep -q .; then
   echo 'Unexpected environment file: refusing CI build'; exit 1
 fi
-export VITE_API_ORIGIN='' VITE_PUBLIC_ORIGIN='' VITE_SUPPORT_CONTACT=''
+source scripts/mobile-demo-env.sh
 evidence="$RUNNER_TEMP/gift-qa-evidence"
 logs="$RUNNER_TEMP/gift-qa-private-logs"
 keydir="$RUNNER_TEMP/gift-test-signing"
@@ -65,7 +65,7 @@ lines=['Gift Lists synthetic Android acceptance',f"Source: {os.environ['REVIEWED
        f"Run: {os.environ['GITHUB_RUN_ID']} attempt {os.environ['GITHUB_RUN_ATTEMPT']}",
        f"API: {os.environ['API_LEVEL']}",f"Result: {os.environ['GIFT_QA_RESULT']}",
        f"Last stage: {os.environ['GIFT_QA_STAGE']}; exit: {os.environ['GIFT_QA_EXIT']}",
-       'APK is ephemeral TEST-signed, API/public origins intentionally absent; NOT store-ready.',
+       f"APK is ephemeral TEST-signed; mode={os.environ.get('GIFT_ANDROID_MODE','offline')}; API={os.environ.get('VITE_API_ORIGIN') or 'absent'}; NOT store-ready.",
        'No production data/API credential or production signing key used.',
        'No cache/Actions artifact upload. Only APK, report and up to3 fixed synthetic UI PNGs are allowlisted.',
        'A pending/failed stage is not proof of later-stage acceptance.']
@@ -93,7 +93,7 @@ for name in ['offline-editor.png','offline-preview-cards.png','offline-preview.p
         lines += [f'Synthetic screenshot captured: {name}; bytes={len(data)}; SHA256={hashlib.sha256(data).hexdigest()}']
     else:
         lines += [f'Synthetic screenshot NOT_CAPTURED: {name}']
-lines += ['', 'Remaining: hosted API flows/recovery, full human SAF filename/folder navigation,',
+lines += ['', 'Remaining: online acceptance unless explicit online test PASS; full human SAF filename/folder navigation,',
           'native sharesheet/merchant return, IME/safe-area visual checks, TalkBack/large-text,',
           'no-Google-services device, API26 with supported WebView, final signing/RuStore review.',
           'Fixture provider selection is intercepted in one test; native callbacks and real',
@@ -227,8 +227,8 @@ adb install "$evidence/gift-lists-test.apk"
 adb install -t "$keydir/instrumentation.apk"
 adb shell pm clear ru.nemukhina.giftlists | grep -q Success
 run_tests() {
-  name="$1"; classes="$2"; expected="$3"
-  timeout 180 adb shell am instrument -w -r -e class "$classes" ru.nemukhina.giftlists.test/androidx.test.runner.AndroidJUnitRunner > "$logs/instrument-$name.txt" 2>&1
+  name="$1"; classes="$2"; expected="$3"; seconds="${4:-180}"
+  timeout "$seconds" adb shell am instrument -w -r -e class "$classes" ru.nemukhina.giftlists.test/androidx.test.runner.AndroidJUnitRunner > "$logs/instrument-$name.txt" 2>&1
   cat "$logs/instrument-$name.txt"
   grep -Eq "^OK \\($expected tests?\\)" "$logs/instrument-$name.txt"
   ! grep -Eq 'FAILURES|INSTRUMENTATION_FAILED|Process crashed|shortMsg=' "$logs/instrument-$name.txt"
@@ -246,3 +246,16 @@ run_tests restart 'ru.nemukhina.giftlists.PersistenceAfterRestartTest' 1
 run_tests documents 'ru.nemukhina.giftlists.DocumentsRuntimeTest' 2
 stage='all-offline-runtime-checks-complete'
 result='PASS (5 instrumentation tests; hosted API/device visual gates not included)'
+
+if [[ "${GIFT_ANDROID_MODE:-offline}" == online ]]; then
+  stage='online-runtime'
+  # Same APK and signature: preserve all five offline tests and their screenshots.
+  adb shell am force-stop ru.nemukhina.giftlists
+  adb shell pm clear ru.nemukhina.giftlists | grep -q Success
+  adb shell svc wifi enable
+  adb shell svc data enable
+  adb emu gsm data on >/dev/null
+  run_tests online 'ru.nemukhina.giftlists.OnlineAcceptanceTest' 1 600
+  stage='all-offline-and-online-runtime-checks-complete'
+  result='PASS (5 offline +1 hosted synthetic online instrumentation tests; device visual/store gates remain)'
+fi
