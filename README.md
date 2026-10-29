@@ -41,7 +41,7 @@ Clients create 256-bit owner/recovery capabilities using platform CSPRNG; the se
 
 Credentials are not in ordinary drafts, exports, logs or guest links. A recovery file intentionally contains the recovery capability and explicitly warns that it grants full control. Android backup excludes app data; no Google account is required. Lose both device access and recovery file and the lists cannot be reclaimed by their public URL/name.
 
-Offline first launch/edit/save works on Android; cached guest availability is explicitly unknown until a fresh response. No offline booking/cancellation queue exists. A timeout is unknown, not a success. Optimistic versions and idempotency prevent silent overwrites and duplicate publication; reservation/archive operations share PostgreSQL transaction locks.
+Android bundles the editor for offline first launch/edit/save; actual device acceptance is still pending. Cached guest availability is explicitly unknown until a fresh response. No offline booking/cancellation queue exists. A timeout is unknown, not a success. Optimistic versions and idempotency prevent silent overwrites and duplicate publication; reservation/archive operations share PostgreSQL transaction locks.
 
 Reports are stored in PostgreSQL for operator handling, not sent to a nonexistent email. Approved operator contact, legal notices, retention/backup policy, moderation response arrangements and Russian production hosting are still release gates. The demo's report/receipt expiry is documented in the API README. Account deletion removes owned server lists/bookings/credentials, with verifier-only retry/anti-replay records retained for the bounded documented period.
 

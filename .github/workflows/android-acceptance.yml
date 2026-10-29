@@ -1,0 +1,64 @@
+name: Manual Android acceptance (synthetic demo)
+on:
+  workflow_dispatch:
+    inputs:
+      reviewed_sha:
+        description: Exact reviewed main commit (40 lowercase hex); no branch/fork execution
+        required: true
+        type: string
+permissions:
+  contents: read
+concurrency:
+  group: gift-android-manual-acceptance
+  cancel-in-progress: false
+jobs:
+  native-acceptance:
+    if: github.event_name == 'workflow_dispatch' && github.repository == 'marinanemukhina-lgtm/gift-lists-android' && github.repository_id == '1435989060' && github.event.repository.private == false && github.event.repository.visibility == 'public' && github.ref == 'refs/heads/main' && github.run_attempt == '1' && inputs.reviewed_sha == github.sha
+    runs-on: ubuntu-24.04
+    timeout-minutes: 40
+    # Explicitly approved WHOLE-JOB write authority, not asset-only authority.
+    # Used only by final script for an UNPUBLISHED draft release; never publish.
+    permissions:
+      contents: write
+    env:
+      CI: 'true'
+      VITE_API_ORIGIN: ''
+      VITE_PUBLIC_ORIGIN: ''
+      VITE_SUPPORT_CONTACT: ''
+      API_LEVEL: '36'
+      REVIEWED_SHA: ${{ inputs.reviewed_sha }}
+    steps:
+      - name: Require the reviewed main snapshot
+        shell: bash
+        run: |
+          set -euo pipefail
+          [[ "$GITHUB_RUN_ATTEMPT" == 1 ]]
+          [[ "$REVIEWED_SHA" =~ ^[0-9a-f]{40}$ ]]
+          [[ "$REVIEWED_SHA" == "$GITHUB_SHA" ]]
+          [[ "$GITHUB_REPOSITORY" == 'marinanemukhina-lgtm/gift-lists-android' ]]
+      - name: Checkout exact reviewed commit
+        uses: actions/checkout@34e114876b0b11c390a56381ad16ebd13914f8d5 # v4.3.1
+        with:
+          ref: ${{ github.sha }}
+          persist-credentials: false
+          fetch-depth: 1
+      - name: Node without cache or registry credentials
+        uses: actions/setup-node@49933ea5288caeca8642d1e84afbd3f7d6820020 # v4.4.0
+        with:
+          node-version: '22.23.4'
+          # No cache input: never use Actions storage.
+      - name: Build, ephemeral TEST-sign, KVM boot and real offline runtime checks
+        id: qa
+        shell: bash
+        run: bash scripts/mobile-ci-acceptance.sh
+      - name: Preserve bounded evidence in an unpublished draft (including FAIL)
+        if: always() && steps.qa.outcome != 'skipped'
+        env:
+          GITHUB_TOKEN: ${{ github.token }}
+        run: python3 scripts/mobile-ci-draft.py
+      - name: Remove ephemeral test key and shut down the single emulator
+        if: always()
+        shell: bash
+        run: |
+          "$ANDROID_HOME/platform-tools/adb" -s emulator-5554 emu kill >/dev/null 2>&1 || true
+          rm -rf -- "$RUNNER_TEMP/gift-test-signing"

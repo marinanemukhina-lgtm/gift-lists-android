@@ -1,0 +1,8 @@
+<manifest xmlns:android="http://schemas.android.com/apk/res/android">
+    <application>
+        <!-- Synthetic fixed-path fixture exists ONLY in instrumentation APK, never app APK. -->
+        <provider android:name="ru.nemukhina.giftlists.FixtureProvider"
+            android:authorities="ru.nemukhina.giftlists.test.fixture"
+            android:exported="true" />
+    </application>
+</manifest>

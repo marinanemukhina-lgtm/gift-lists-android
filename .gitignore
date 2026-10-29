@@ -1,0 +1,17 @@
+node_modules/
+.next/
+dist/
+.env*
+!.env.example
+*.jks
+*.keystore
+*.apk
+*.aab
+*.log
+apps/mobile/android/.gradle/
+apps/mobile/android/**/build/
+apps/mobile/android/local.properties
+*.tsbuildinfo
+.preview-data/
+.npm-cache/
+evidence/

@@ -1,0 +1,12 @@
+node_modules
+.git
+**/.next
+**/dist
+**/android
+.env*
+*.apk
+*.aab
+*.keystore
+*.jks
+
+.preview-data/

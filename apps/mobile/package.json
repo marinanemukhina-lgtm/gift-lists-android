@@ -1,0 +1,1 @@
+{"name":"gift-lists-android","version":"0.1.0","private":true,"type":"module","dependencies":{"@capacitor/core":"8.5.3","@capacitor/android":"8.5.3","@capacitor/app":"8.0.1","@capacitor/share":"8.0.1","@capacitor/browser":"8.0.1","@capacitor/network":"8.0.1","@capacitor/filesystem":"8.1.2","@capacitor/preferences":"8.0.1","@aparajita/capacitor-secure-storage":"8.0.1"}}

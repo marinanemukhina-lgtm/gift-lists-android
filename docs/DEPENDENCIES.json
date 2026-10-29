@@ -1,0 +1,195 @@
+{
+  "checked": "2026-10-27",
+  "note": "Direct installed locked dependencies; final release still requires bundled/transitive/native notices review. No application license invented.",
+  "overrides": {
+    "xcode": {
+      "uuid": "11.1.1"
+    }
+  },
+  "dependencies": [
+    {
+      "name": "@aparajita/capacitor-secure-storage",
+      "version": "8.0.1",
+      "requested": "8.0.1",
+      "license": "MIT",
+      "scope": "runtime",
+      "repository": "https://github.com/aparajita/capacitor-secure-storage.git"
+    },
+    {
+      "name": "@capacitor/android",
+      "version": "8.5.3",
+      "requested": "8.5.3",
+      "license": "MIT",
+      "scope": "runtime",
+      "repository": "git+https://github.com/ionic-team/capacitor.git"
+    },
+    {
+      "name": "@capacitor/app",
+      "version": "8.0.1",
+      "requested": "8.0.1",
+      "license": "MIT",
+      "scope": "runtime",
+      "repository": "git+https://github.com/ionic-team/capacitor-plugins.git"
+    },
+    {
+      "name": "@capacitor/browser",
+      "version": "8.0.1",
+      "requested": "8.0.1",
+      "license": "MIT",
+      "scope": "runtime",
+      "repository": "https://github.com/ionic-team/capacitor-plugins"
+    },
+    {
+      "name": "@capacitor/core",
+      "version": "8.5.3",
+      "requested": "8.5.3",
+      "license": "MIT",
+      "scope": "runtime",
+      "repository": "git+https://github.com/ionic-team/capacitor.git"
+    },
+    {
+      "name": "@capacitor/filesystem",
+      "version": "8.1.2",
+      "requested": "8.1.2",
+      "license": "MIT",
+      "scope": "runtime",
+      "repository": "https://github.com/ionic-team/capacitor-filesystem.git"
+    },
+    {
+      "name": "@capacitor/network",
+      "version": "8.0.1",
+      "requested": "8.0.1",
+      "license": "MIT",
+      "scope": "runtime",
+      "repository": "https://github.com/ionic-team/capacitor-plugins"
+    },
+    {
+      "name": "@capacitor/preferences",
+      "version": "8.0.1",
+      "requested": "8.0.1",
+      "license": "MIT",
+      "scope": "runtime",
+      "repository": "https://github.com/ionic-team/capacitor-plugins"
+    },
+    {
+      "name": "@capacitor/share",
+      "version": "8.0.1",
+      "requested": "8.0.1",
+      "license": "MIT",
+      "scope": "runtime",
+      "repository": "git+https://github.com/ionic-team/capacitor-plugins.git"
+    },
+    {
+      "name": "next",
+      "version": "16.4.3",
+      "requested": "16.4.3",
+      "license": "MIT",
+      "scope": "runtime",
+      "repository": "vercel/next.js"
+    },
+    {
+      "name": "pg",
+      "version": "8.16.3",
+      "requested": "8.16.3",
+      "license": "MIT",
+      "scope": "runtime",
+      "repository": "git://github.com/brianc/node-postgres.git"
+    },
+    {
+      "name": "react",
+      "version": "19.2.6",
+      "requested": "19.2.6",
+      "license": "MIT",
+      "scope": "runtime",
+      "repository": "https://github.com/facebook/react.git"
+    },
+    {
+      "name": "react-dom",
+      "version": "19.2.6",
+      "requested": "19.2.6",
+      "license": "MIT",
+      "scope": "runtime",
+      "repository": "https://github.com/facebook/react.git"
+    },
+    {
+      "name": "@capacitor/cli",
+      "version": "8.5.3",
+      "requested": "8.5.3",
+      "license": "MIT",
+      "scope": "development",
+      "repository": "https://github.com/ionic-team/capacitor.git"
+    },
+    {
+      "name": "@electric-sql/pglite",
+      "version": "0.3.14",
+      "requested": "0.3.14",
+      "license": "Apache-2.0",
+      "scope": "development",
+      "repository": "https://github.com/electric-sql/pglite"
+    },
+    {
+      "name": "@types/node",
+      "version": "22.19.19",
+      "requested": "22.19.19",
+      "license": "MIT",
+      "scope": "development",
+      "repository": "https://github.com/DefinitelyTyped/DefinitelyTyped.git"
+    },
+    {
+      "name": "@types/pg",
+      "version": "8.15.5",
+      "requested": "8.15.5",
+      "license": "MIT",
+      "scope": "development",
+      "repository": "https://github.com/DefinitelyTyped/DefinitelyTyped.git"
+    },
+    {
+      "name": "@types/react",
+      "version": "19.2.14",
+      "requested": "19.2.14",
+      "license": "MIT",
+      "scope": "development",
+      "repository": "https://github.com/DefinitelyTyped/DefinitelyTyped.git"
+    },
+    {
+      "name": "@types/react-dom",
+      "version": "19.2.3",
+      "requested": "19.2.3",
+      "license": "MIT",
+      "scope": "development",
+      "repository": "https://github.com/DefinitelyTyped/DefinitelyTyped.git"
+    },
+    {
+      "name": "@vitejs/plugin-react",
+      "version": "6.0.2",
+      "requested": "6.0.2",
+      "license": "MIT",
+      "scope": "development",
+      "repository": "git+https://github.com/vitejs/vite-plugin-react.git"
+    },
+    {
+      "name": "tsx",
+      "version": "4.20.6",
+      "requested": "4.20.6",
+      "license": "MIT",
+      "scope": "development",
+      "repository": "privatenumber/tsx"
+    },
+    {
+      "name": "typescript",
+      "version": "5.9.3",
+      "requested": "5.9.3",
+      "license": "Apache-2.0",
+      "scope": "development",
+      "repository": "https://github.com/microsoft/TypeScript.git"
+    },
+    {
+      "name": "vite",
+      "version": "8.3.5",
+      "requested": "8.3.5",
+      "license": "MIT",
+      "scope": "development",
+      "repository": "git+https://github.com/vitejs/vite.git"
+    }
+  ]
+}

@@ -1,0 +1,54 @@
+{
+  "name": "gift-lists-product",
+  "version": "0.1.0",
+  "private": true,
+  "type": "module",
+  "scripts": {
+    "dev": "vite --config apps/preview/vite.config.ts",
+    "build:web": "next build apps/web",
+    "build:mobile": "vite build --config apps/mobile/vite.config.ts",
+    "test": "node --import tsx --test --test-concurrency=1 tests/*.test.ts services/api/tests/*.test.ts packages/ui/tests/*.test.ts apps/mobile/tests/*.test.ts",
+    "typecheck": "tsc --noEmit",
+    "db:migrate": "node --import tsx services/api/src/migrate.ts",
+    "build": "npm run build:web",
+    "start": "next start apps/web",
+    "check": "npm run typecheck && npm test && npm run test:mobile-tooling && npm run build:web && npm run build:mobile",
+    "dev:web": "next dev apps/web --hostname 127.0.0.1",
+    "test:mobile-tooling": "python3 -B apps/mobile/tests/build-script.test.py && python3 -B apps/mobile/tests/ci-evidence.test.py"
+  },
+  "dependencies": {
+    "@aparajita/capacitor-secure-storage": "8.0.1",
+    "@capacitor/android": "8.5.3",
+    "@capacitor/app": "8.0.1",
+    "@capacitor/browser": "8.0.1",
+    "@capacitor/core": "8.5.3",
+    "@capacitor/filesystem": "8.1.2",
+    "@capacitor/network": "8.0.1",
+    "@capacitor/preferences": "8.0.1",
+    "@capacitor/share": "8.0.1",
+    "next": "16.4.3",
+    "pg": "8.16.3",
+    "react": "19.2.6",
+    "react-dom": "19.2.6"
+  },
+  "devDependencies": {
+    "@capacitor/cli": "8.5.3",
+    "@electric-sql/pglite": "0.3.14",
+    "@types/node": "22.19.19",
+    "@types/pg": "8.15.5",
+    "@types/react": "19.2.14",
+    "@types/react-dom": "19.2.3",
+    "@vitejs/plugin-react": "6.0.2",
+    "tsx": "4.20.6",
+    "typescript": "5.9.3",
+    "vite": "8.3.5"
+  },
+  "engines": {
+    "node": ">=22.13.0"
+  },
+  "overrides": {
+    "xcode": {
+      "uuid": "11.1.1"
+    }
+  }
+}
