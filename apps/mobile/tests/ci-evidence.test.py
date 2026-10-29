@@ -8,6 +8,7 @@ import sys
 import struct
 import zlib
 import tempfile
+import subprocess
 import unittest
 import urllib.request
 import zipfile
@@ -74,7 +75,7 @@ class EvidenceTests(unittest.TestCase):
         workflow=(path.parent.parent/'.github/workflows/android-acceptance.yml').read_text()
         condition=next(line.strip()[4:] for line in workflow.splitlines() if line.startswith('    if: '))
         envelope, common = condition.split(')) && ', 1)
-        self.assertEqual(envelope + '))', "((github.event_name == 'workflow_dispatch' && inputs.reviewed_sha == github.sha) || (github.event_name == 'push' && github.event.before == '205621b822848a44509f42205ffda8da9a5d12f2' && github.event.forced == false && github.event.deleted == false && github.event.head_commit.message == 'Run approved one-shot Android acceptance'))")
+        self.assertEqual(envelope + '))', "((github.event_name == 'workflow_dispatch' && inputs.reviewed_sha == github.sha) || (github.event_name == 'push' && github.event.before == '6d0c864582d4a01f4ce3a60283cfbe13b0d111d4' && github.event.forced == false && github.event.deleted == false && github.event.head_commit.message == 'Run approved corrective Android acceptance'))")
         self.assertEqual(set(common.split(' && ')),{
             "github.repository == 'marinanemukhina-lgtm/gift-lists-android'",
             "github.repository_id == '1435989060'",
@@ -106,6 +107,26 @@ class EvidenceTests(unittest.TestCase):
             event_path.write_text(json.dumps(payload))
             with self.assertRaises(AssertionError): module.context({**good, 'GITHUB_RUN_ATTEMPT': '2'})
             with self.assertRaises(AssertionError): module.context({**good, 'GITHUB_EVENT_NAME': 'pull_request'})
+
+    def test_signer_sidecars_remain_outside_evidence(self):
+        # apksigner generates .idsig by default. Simulate that official behavior,
+        # execute the actual signing section, and keep the evidence allowlist strict.
+        with tempfile.TemporaryDirectory() as root:
+            root = pathlib.Path(root)
+            sdk = root / 'sdk/build-tools/36.0.0'; sdk.mkdir(parents=True)
+            key = root / 'key'; key.mkdir()
+            out = root / 'evidence'; out.mkdir()
+            for name, body in {
+                'zipalign': '#!/bin/bash\ntouch "${@: -1}"\n',
+                'apksigner': '#!/bin/bash\n[[ "$1" == verify ]] && exit 0\nwhile (($#)); do if [[ "$1" == --out ]]; then shift; touch "$1" "$1.idsig"; exit 0; fi; shift; done\nexit 1\n',
+            }.items():
+                tool = sdk / name; tool.write_text(body); tool.chmod(0o755)
+            script = (path.parent / 'mobile-ci-acceptance.sh').read_text()
+            section = script.split('buildtools="$ANDROID_HOME/build-tools/36.0.0"', 1)[1].split('unset GIFT_TEST_PASSWORD', 1)[0]
+            prefix = f'buildtools="{sdk}"; keydir="{key}"; evidence="{out}"; app=fixture; test_apks=(fixture); '
+            subprocess.run(['bash', '-euc', prefix + section], check=True)
+            self.assertEqual({x.name for x in out.iterdir()}, {'gift-lists-test.apk'})
+            self.assertTrue((key / 'gift-lists-test.apk.idsig').exists())
 
     def test_context_rejects_local_or_changed_source(self):
         with tempfile.TemporaryDirectory() as root:

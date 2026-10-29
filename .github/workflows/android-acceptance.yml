@@ -16,7 +16,7 @@ concurrency:
   cancel-in-progress: false
 jobs:
   native-acceptance:
-    if: ((github.event_name == 'workflow_dispatch' && inputs.reviewed_sha == github.sha) || (github.event_name == 'push' && github.event.before == '205621b822848a44509f42205ffda8da9a5d12f2' && github.event.forced == false && github.event.deleted == false && github.event.head_commit.message == 'Run approved one-shot Android acceptance')) && github.repository == 'marinanemukhina-lgtm/gift-lists-android' && github.repository_id == '1435989060' && github.event.repository.private == false && github.event.repository.visibility == 'public' && github.ref == 'refs/heads/main' && github.run_attempt == '1'
+    if: ((github.event_name == 'workflow_dispatch' && inputs.reviewed_sha == github.sha) || (github.event_name == 'push' && github.event.before == '6d0c864582d4a01f4ce3a60283cfbe13b0d111d4' && github.event.forced == false && github.event.deleted == false && github.event.head_commit.message == 'Run approved corrective Android acceptance')) && github.repository == 'marinanemukhina-lgtm/gift-lists-android' && github.repository_id == '1435989060' && github.event.repository.private == false && github.event.repository.visibility == 'public' && github.ref == 'refs/heads/main' && github.run_attempt == '1'
     runs-on: ubuntu-24.04
     timeout-minutes: 40
     # Explicitly approved WHOLE-JOB write authority, not asset-only authority.

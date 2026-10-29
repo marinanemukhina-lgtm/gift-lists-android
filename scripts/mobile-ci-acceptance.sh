@@ -159,9 +159,13 @@ keytool -genkeypair -noprompt -storetype PKCS12 -keystore "$keydir/test.p12" -al
   -storepass:env GIFT_TEST_PASSWORD -keypass:env GIFT_TEST_PASSWORD >/dev/null 2>&1
 buildtools="$ANDROID_HOME/build-tools/36.0.0"
 "$buildtools/zipalign" -f -P 16 4 "$app" "$keydir/app-aligned.apk"
-"$buildtools/apksigner" sign --ks "$keydir/test.p12" --ks-key-alias gift-test --ks-pass env:GIFT_TEST_PASSWORD --key-pass env:GIFT_TEST_PASSWORD --out "$evidence/gift-lists-test.apk" "$keydir/app-aligned.apk"
+"$buildtools/apksigner" sign --ks "$keydir/test.p12" --ks-key-alias gift-test --ks-pass env:GIFT_TEST_PASSWORD --key-pass env:GIFT_TEST_PASSWORD --out "$keydir/gift-lists-test.apk" "$keydir/app-aligned.apk"
 "$buildtools/zipalign" -f -P 16 4 "${test_apks[0]}" "$keydir/test-aligned.apk"
 "$buildtools/apksigner" sign --ks "$keydir/test.p12" --ks-key-alias gift-test --ks-pass env:GIFT_TEST_PASSWORD --key-pass env:GIFT_TEST_PASSWORD --out "$keydir/instrumentation.apk" "$keydir/test-aligned.apk"
+# Keep optional signer sidecars (e.g. .idsig) out of the strict evidence envelope.
+# Only the verified standalone APK is copied; sidecars are removed with the temporary key directory.
+"$buildtools/apksigner" verify "$keydir/gift-lists-test.apk"
+cp -- "$keydir/gift-lists-test.apk" "$evidence/gift-lists-test.apk"
 "$buildtools/apksigner" verify "$evidence/gift-lists-test.apk"
 "$buildtools/apksigner" verify "$keydir/instrumentation.apk"
 unset GIFT_TEST_PASSWORD
